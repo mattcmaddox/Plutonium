@@ -40,7 +40,7 @@ namespace pu::ui::render
             SDL_Init(this->sdlflags);
             this->rendwd = SDL_CreateWindow("Plutonium-SDL2", 0, 0, this->ww, this->wh, 0);
             purend = SDL_CreateRenderer(this->rendwd, -1, this->nrendflags);
-            this->rendsf = SDL_GetWindowSurface(this->rendwd);
+            this->rendsf = NULL; // SDL_GetWindowSurface unused; avoids per-frame GPU surface upload
             SDL_SetRenderDrawBlendMode(purend, SDL_BLENDMODE_BLEND);
             SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "2");
 

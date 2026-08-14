@@ -13,7 +13,16 @@ namespace pu::ui::render
 
     NativeTexture ConvertToTexture(NativeSurface Surface)
     {
-        NativeTexture tex = SDL_CreateTextureFromSurface(GetMainRenderer(), Surface);
+        if (Surface == nullptr)
+            return nullptr;
+
+        NativeRenderer renderer = GetMainRenderer();
+        if (renderer == nullptr) {
+            SDL_FreeSurface(Surface);
+            return nullptr;
+        }
+
+        NativeTexture tex = SDL_CreateTextureFromSurface(renderer, Surface);
         SDL_FreeSurface(Surface);
         return tex;
     }
@@ -21,6 +30,8 @@ namespace pu::ui::render
     NativeTexture RenderText(NativeFont Font, NativeFont Meme, const std::string& Text, Color Color)
     {
         NativeSurface txsrf = TTF_RenderUTF8_Blended_Wrapped(Font, Meme, Text.c_str(), { Color.R, Color.G, Color.B, Color.A }, 1280);
+        if (txsrf == nullptr)
+            return nullptr;
         SDL_SetSurfaceAlphaMod(txsrf, 255);
         return ConvertToTexture(txsrf);
     }
@@ -32,10 +43,19 @@ namespace pu::ui::render
 
     NativeTexture LoadJpegImage(void* buffer, s32 size)
     {
-        return ConvertToTexture(IMG_Load_RW(SDL_RWFromMem(buffer, size), size));
+        if (buffer == nullptr || size <= 0)
+            return nullptr;
+        // SDL_RWFromConstMem never frees the caller's buffer on close.
+        // SDL_RWFromMem DOES SDL_free() it, which corrupts the heap when the
+        // buffer is owned by a C++ object (std::vector, unique_ptr, or a
+        // struct member). The old code passed `size` as IMG_Load_RW's freesrc
+        // argument too, guaranteeing the RWops was closed and the buffer freed.
+        return ConvertToTexture(IMG_Load_RW(SDL_RWFromConstMem(buffer, size), 1));
     }
 
     NativeTexture LoadRgbImage(void* buffer, u64 width, u64 height, u8 depth) {
+        if (buffer == nullptr || width == 0 || height == 0 || depth == 0)
+            return nullptr;
         return ConvertToTexture(SDL_CreateRGBSurfaceFrom(buffer, width, height, depth*8, depth*width, 0x000000ff, 0x0000ff00, 0x00ff0000, depth == 4 ? 0xff000000 : 0));
     }
 

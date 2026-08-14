@@ -91,9 +91,11 @@ namespace pu::ui::elm
         if(ok)    
         {
             this->ntex = render::LoadImage(Image);
-            auto [w,h] = render::GetTextureSize(this->ntex);
-            this->rendopts.Width = w;
-            this->rendopts.Height = h;
+            if (this->ntex != nullptr) {
+                auto [w,h] = render::GetTextureSize(this->ntex);
+                this->rendopts.Width = w;
+                this->rendopts.Height = h;
+            }
         }
     }
 
@@ -103,18 +105,22 @@ namespace pu::ui::elm
             return;
         render::DeleteTexture(this->ntex);
         this->ntex = render::LoadJpegImage(buffer, size);
-        auto [w,h] = render::GetTextureSize(this->ntex);
-        this->rendopts.Width = w;
-        this->rendopts.Height = h;
+        if (this->ntex != nullptr) {
+            auto [w,h] = render::GetTextureSize(this->ntex);
+            this->rendopts.Width = w;
+            this->rendopts.Height = h;
+        }
     }
 
     void Image::SetRgbImage(void* buffer, u64 width, u64 height, u8 depth)
     {
         render::DeleteTexture(this->ntex);
         this->ntex = render::LoadRgbImage(buffer, width, height, depth);
-        auto [w,h] = render::GetTextureSize(this->ntex);
-        this->rendopts.Width = w;
-        this->rendopts.Height = h;
+        if (this->ntex != nullptr) {
+            auto [w,h] = render::GetTextureSize(this->ntex);
+            this->rendopts.Width = w;
+            this->rendopts.Height = h;
+        }
     }
 
     bool Image::IsImageValid()
