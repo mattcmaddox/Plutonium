@@ -229,9 +229,17 @@ namespace pu::ui::elm
         {
             this->isel = Index;
             this->fisel = 0;
-            if(this->isel >= (this->itms.size() - this->ishow)) this->fisel = this->itms.size() - this->ishow;
-            else if(this->isel < this->ishow) this->fisel = 0;
-            else this->fisel = this->isel;
+            // VIM-zz centered scroll (app-wide convention): place the selection
+            // at the viewport midpoint once it passes it, pinned at the top
+            // until then and at the bottom for the last rows. Keeps fisel in
+            // sync with interactive navigation (OnInput) so the window never
+            // disagrees between the two code paths.
+            if(this->itms.size() > this->ishow)
+            {
+                const s32 maxFisel = this->itms.size() - this->ishow;
+                const s32 desiredFisel = this->isel - (this->ishow / 2);
+                this->fisel = (desiredFisel < 0) ? 0 : ((desiredFisel > maxFisel) ? maxFisel : desiredFisel);
+            }
 
             ReloadItemRenders();
             this->selfact = 255;
@@ -406,23 +414,28 @@ namespace pu::ui::elm
                 {
                     if(this->isel < (this->itms.size() - 1))
                     {
-                        if((this->isel - this->fisel) == (this->ishow - 1))
+                        this->previsel = this->isel;
+                        this->isel++;
+                        (this->onselch)();
+                        // VIM-zz centered scroll (app-wide convention): keep the
+                        // selection at the viewport midpoint once it passes it
+                        // (pinned at the top until then, at the bottom for the
+                        // last rows) instead of letting it run to the edge.
+                        if(this->itms.size() > this->ishow)
                         {
-                            this->fisel++;
-                            this->isel++;
-                            (this->onselch)();
-                            ReloadItemRenders();
-                        }
-                        else
-                        {
-                            this->previsel = this->isel;
-                            this->isel++;
-                            (this->onselch)();
-                            if(!this->itms.empty()) for(s32 i = 0; i < this->itms.size(); i++)
+                            const s32 maxFisel = this->itms.size() - this->ishow;
+                            const s32 desiredFisel = this->isel - (this->ishow / 2);
+                            const s32 newFisel = (desiredFisel < 0) ? 0 : ((desiredFisel > maxFisel) ? maxFisel : desiredFisel);
+                            if(newFisel != this->fisel)
                             {
-                                if(i == this->isel) this->selfact = 0;
-                                else if(i == this->previsel) this->pselfact = 255;
+                                this->fisel = newFisel;
+                                ReloadItemRenders();
                             }
+                        }
+                        if(!this->itms.empty()) for(s32 i = 0; i < this->itms.size(); i++)
+                        {
+                            if(i == this->isel) this->selfact = 0;
+                            else if(i == this->previsel) this->pselfact = 255;
                         }
                     }
                     else
@@ -457,31 +470,40 @@ namespace pu::ui::elm
                 {
                     if(this->isel > 0)
                     {
-                        if(this->isel == this->fisel)
+                        this->previsel = this->isel;
+                        this->isel--;
+                        (this->onselch)();
+                        // VIM-zz centered scroll (app-wide convention) — same
+                        // centering as the Down path so the window moves
+                        // symmetrically in both directions.
+                        if(this->itms.size() > this->ishow)
                         {
-                            this->fisel--;
-                            this->isel--;
-                            (this->onselch)();
-                            ReloadItemRenders();
-                        }
-                        else
-                        {
-                            this->previsel = this->isel;
-                            this->isel--;
-                            (this->onselch)();
-                            if(!this->itms.empty()) for(s32 i = 0; i < this->itms.size(); i++)
+                            const s32 maxFisel = this->itms.size() - this->ishow;
+                            const s32 desiredFisel = this->isel - (this->ishow / 2);
+                            const s32 newFisel = (desiredFisel < 0) ? 0 : ((desiredFisel > maxFisel) ? maxFisel : desiredFisel);
+                            if(newFisel != this->fisel)
                             {
-                                if(i == this->isel) this->selfact = 0;
-                                else if(i == this->previsel) this->pselfact = 255;
+                                this->fisel = newFisel;
+                                ReloadItemRenders();
                             }
+                        }
+                        if(!this->itms.empty()) for(s32 i = 0; i < this->itms.size(); i++)
+                        {
+                            if(i == this->isel) this->selfact = 0;
+                            else if(i == this->previsel) this->pselfact = 255;
                         }
                     }
                     else
                     {
                         this->isel = this->itms.size() - 1;
                         this->fisel = 0;
-                        if(this->itms.size() > this->ishow) {
-                            this->fisel = this->itms.size() - this->ishow;
+                        if(this->itms.size() > this->ishow)
+                        {
+                            // Wrapped to the last row: center it (zz) instead of
+                            // pinning it to the very bottom of the window.
+                            const s32 maxFisel = this->itms.size() - this->ishow;
+                            const s32 desiredFisel = this->isel - (this->ishow / 2);
+                            this->fisel = (desiredFisel < 0) ? 0 : ((desiredFisel > maxFisel) ? maxFisel : desiredFisel);
                             ReloadItemRenders();
                         }
                     }
