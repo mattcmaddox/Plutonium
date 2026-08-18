@@ -1,4 +1,5 @@
 #include <pu/ui/ui_Layout.hpp>
+#include <utility>
 
 namespace pu::ui
 {
@@ -42,19 +43,29 @@ namespace pu::ui
 
     void Layout::SetBackgroundImage(const std::string& Path)
     {
+        this->sharedbgtex.reset();
         render::DeleteTexture(this->overbgtex);
         this->hasimage = true;
         this->overbgtex = render::LoadImage(Path);
     }
 
+    void Layout::SetBackgroundSharedTexture(render::SharedTextureRef Texture)
+    {
+        render::DeleteTexture(this->overbgtex);
+        this->sharedbgtex = std::move(Texture);
+        this->hasimage = (this->sharedbgtex != nullptr);
+    }
+
     void Layout::SetBackgroundJpegImage(void* JpegBuffer, s32 size)
     {
+        this->sharedbgtex.reset();
         render::DeleteTexture(this->overbgtex);
         this->hasimage = true;
         this->overbgtex = render::LoadJpegImage(JpegBuffer, size);
     }
 
     void Layout::SetBackgroundRgbImage(void* RgbBuffer, u64 width, u64 height, u8 depth) {
+        this->sharedbgtex.reset();
         render::DeleteTexture(this->overbgtex);
         this->hasimage = true;
         this->overbgtex = render::LoadRgbImage(RgbBuffer, width, height, depth);
@@ -62,6 +73,7 @@ namespace pu::ui
 
     void Layout::SetBackgroundColor(Color Color)
     {
+        this->sharedbgtex.reset();
         render::DeleteTexture(this->overbgtex);
         this->hasimage = false;
         this->overbgcolor = Color;
@@ -81,7 +93,9 @@ namespace pu::ui
 
     render::NativeTexture Layout::GetBackgroundImageTexture()
     {
-        return this->overbgtex;
+        return this->sharedbgtex != nullptr
+            ? this->sharedbgtex->Get()
+            : this->overbgtex;
     }
 
     Color Layout::GetBackgroundColor()

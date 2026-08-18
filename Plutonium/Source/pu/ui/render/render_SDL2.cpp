@@ -169,4 +169,19 @@ namespace pu::ui::render
             Texture = NULL;
         }
     }
+
+    SharedTexture::SharedTexture(NativeTexture Texture)
+        : texture(Texture)
+    {
+    }
+
+    SharedTexture::~SharedTexture()
+    {
+        DeleteTexture(this->texture);
+    }
+
+    NativeTexture SharedTexture::Get() const
+    {
+        return this->texture;
+    }
 }

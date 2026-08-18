@@ -30,6 +30,7 @@ namespace pu::ui
             void AddThread(std::function<void()> Callback);
             std::vector<std::function<void()>> GetAllThreads();
             void SetBackgroundImage(const std::string& Path);
+            void SetBackgroundSharedTexture(render::SharedTextureRef Texture);
             void SetBackgroundJpegImage(void* JpegBuffer, s32 size);
             void SetBackgroundRgbImage(void* RgbBuffer, u64 width, u64 height, u8 depth = 4);
             void SetBackgroundColor(Color Color);
@@ -43,6 +44,7 @@ namespace pu::ui
             Color overbgcolor;
             Touch simtouch;
             render::NativeTexture overbgtex = nullptr;
+            render::SharedTextureRef sharedbgtex;
             std::function<void(u64, u64, u64, Touch)> onipt;
             std::vector<std::function<void()>> thds;
     };

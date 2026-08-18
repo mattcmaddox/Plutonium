@@ -14,6 +14,8 @@
 #pragma once
 #include <string>
 #include <vector>
+#include <memory>
+#include <pu/pu_Macros.hpp>
 #include <pu/ui/ui_Types.hpp>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
@@ -55,4 +57,22 @@ namespace pu::ui::render
     void SetAlphaValue(NativeTexture Texture, u8 Alpha);
     void DeleteFont(NativeFont& Font);
     void DeleteTexture(NativeTexture& Texture);
+
+    // Shared ownership for textures used by multiple UI objects. The texture
+    // is destroyed exactly once when the last SharedTexture reference goes
+    // away, while individual Layouts can retain independent background state.
+    class SharedTexture
+    {
+        public:
+            explicit SharedTexture(NativeTexture Texture);
+            PU_SMART_CTOR(SharedTexture)
+            ~SharedTexture();
+
+            NativeTexture Get() const;
+
+        private:
+            NativeTexture texture;
+    };
+
+    using SharedTextureRef = std::shared_ptr<SharedTexture>;
 }
