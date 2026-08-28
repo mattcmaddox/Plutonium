@@ -484,9 +484,21 @@ namespace pu::ui::elm
                     }
                     else
                     {
+                        // Wrap-around: the highlight jumps from the last row to
+                        // the first, but the selection DID change, so the
+                        // callback must fire exactly like a normal move —
+                        // otherwise the shop sidebar never selects the wrapped
+                        // section and the gallery keeps showing the old one.
+                        this->previsel = this->isel;
                         this->isel = 0;
                         this->fisel = 0;
+                        (this->onselch)();
                         ReloadItemRenders();
+                        if(!this->itms.empty()) for(s32 i = 0; i < this->itms.size(); i++)
+                        {
+                            if(i == this->isel) this->selfact = 0;
+                            else if(i == this->previsel) this->pselfact = 255;
+                        }
                     }
                 }
             }
@@ -536,6 +548,9 @@ namespace pu::ui::elm
                     }
                     else
                     {
+                        // Wrap-around from the top row to the last row: fire the
+                        // selection callback too (see the AnyDown wrap above).
+                        this->previsel = this->isel;
                         this->isel = this->itms.size() - 1;
                         this->fisel = 0;
                         if(this->itms.size() > this->ishow)
@@ -546,7 +561,13 @@ namespace pu::ui::elm
                             const s32 desiredFisel = this->isel - (this->ishow / 2);
                             this->fisel = (desiredFisel < 0) ? 0 : ((desiredFisel > maxFisel) ? maxFisel : desiredFisel);
                         }
+                        (this->onselch)();
                         ReloadItemRenders();
+                        if(!this->itms.empty()) for(s32 i = 0; i < this->itms.size(); i++)
+                        {
+                            if(i == this->isel) this->selfact = 0;
+                            else if(i == this->previsel) this->pselfact = 255;
+                        }
                     }
                 }
             }
