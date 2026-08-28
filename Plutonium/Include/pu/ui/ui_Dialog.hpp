@@ -30,10 +30,14 @@ namespace pu::ui
             bool HasCancelOption();
             void SetIcon(const std::string& Icon);
             bool Hasicon();
+            void SetButtonColor(s32 R, s32 G, s32 B);
             s32 Show(render::Renderer::Ref &Drawer, void *App);
             bool UserCancelled();
             bool IsOk();
         private:
+            s32 btnR = -1;
+            s32 btnG = -1;
+            s32 btnB = -1;
             bool hcancel;
             std::string scancel;
             render::NativeFont titleFont;

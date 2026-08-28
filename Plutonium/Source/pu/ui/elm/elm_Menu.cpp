@@ -87,6 +87,8 @@ namespace pu::ui::elm
         : Element::Element(), x(X), y(Y), w(Width), clr(OptionColor), isize(ItemSize), ishow(ItemsToShow)
     {
         this->scb = { 110, 110, 110, 255 };
+        this->sclr = { 80, 80, 80, 255 };
+        this->scrollbarOffsetX = 0;
         this->previsel = 0;
         this->isel = 0;
         this->fisel = 0;
@@ -96,6 +98,7 @@ namespace pu::ui::elm
         this->icdown = false;
         this->dtouch = false;
         this->fcs = { 40, 40, 40, 255 };
+        this->fct = { 255, 255, 255, 255 };
         this->basestatus = 0;
         this->font = render::LoadDefaultFont(fontSize);
         this->meme = render::LoadSharedFont(render::SharedFont::NintendoExtended, fontSize);
@@ -176,6 +179,16 @@ namespace pu::ui::elm
         this->fcs = Color;
     }
 
+    Color Menu::GetOnFocusTextColor()
+    {
+        return this->fct;
+    }
+
+    void Menu::SetOnFocusTextColor(Color Color)
+    {
+        this->fct = Color;
+    }
+
     Color Menu::GetScrollbarColor()
     {
         return this->scb;
@@ -186,9 +199,56 @@ namespace pu::ui::elm
         this->scb = Color;
     }
 
+    Color Menu::GetScrollbarHandleColor()
+    {
+        return this->sclr;
+    }
+
+    void Menu::SetScrollbarHandleColor(Color Color)
+    {
+        this->sclr = Color;
+    }
+
+    s32 Menu::GetScrollbarOffsetX()
+    {
+        return this->scrollbarOffsetX;
+    }
+
+    void Menu::SetScrollbarOffsetX(s32 Offset)
+    {
+        this->scrollbarOffsetX = Offset;
+    }
+
     void Menu::SetOnSelectionChanged(std::function<void()> Callback)
     {
         this->onselch = Callback;
+    }
+
+    void Menu::RefreshFocusTextRender()
+    {
+        if(this->itms.empty() || this->loadednames.empty()) return;
+        if(this->isel < 0 || this->isel >= (s32)this->itms.size()) return;
+        s32 focusIdx = this->isel - this->fisel;
+        if(focusIdx < 0 || focusIdx >= (s32)this->loadednames.size()) return;
+        render::DeleteTexture(this->loadednames[static_cast<u32>(focusIdx)]);
+        auto strname = this->itms[this->isel]->GetName();
+        auto tex = render::RenderText(this->font, this->meme, strname, this->fct);
+        this->loadednames[static_cast<u32>(focusIdx)] = tex;
+    }
+
+    void Menu::SetHideFocusedText(bool Hide)
+    {
+        this->hideFocusedText = Hide;
+    }
+
+    void Menu::SetSuppressFocus(bool Suppress)
+    {
+        this->suppressFocus = Suppress;
+    }
+
+    void Menu::SetSuppressBaseBackground(bool Suppress)
+    {
+        this->suppressBaseBackground = Suppress;
     }
 
     void Menu::AddItem(MenuItem::Ref &Item)
@@ -274,38 +334,23 @@ namespace pu::ui::elm
                 auto loadedidx = i - this->fisel;
                 auto curname = this->loadednames[loadedidx];
                 auto curicon = this->loadedicons[loadedidx];
-                if(this->isel == i)
-                {
-                    Drawer->RenderRectangleFill(this->fcs, cx, cy, cw, ch);
-                    if(this->selfact < 255)
-                    {
-                        this->selfact += 48;
-                    }
-                }
-                else if(this->previsel == i)
-                {
-                    Drawer->RenderRectangleFill(this->clr, cx, cy, cw, ch);
-                    if(this->pselfact > 0)
-                    {
-                        this->pselfact -= 48;
-                    }
-                }
-                else Drawer->RenderRectangleFill(this->clr, cx, cy, cw, ch);
                 auto itm = this->itms[i];
                 s32 xh = render::GetTextureHeight(curname);
                 s32 tx = (cx + 25);
                 s32 ty = ((ch - xh) / 2) + cy;
-                if(itm->HasIcon())
+                s32 icx = 0, icw = 0, ich = 0, icy = 0;
+                bool hasIcon = itm->HasIcon();
+                if(hasIcon)
                 {
                     if (itm->GetFactor() == 0) {
                         auto [w,h] = render::GetTextureSize(curicon);
                         itm->SetFactor((float)h/w);
                     }
                     float factor = itm->GetFactor();
-                    s32 icw = (this->isize - 10);
-                    s32 ich = icw;
-                    s32 icx = (cx + 25);
-                    s32 icy = (cy + 5);
+                    icw = (this->isize - 10);
+                    ich = icw;
+                    icx = (cx + 25);
+                    icy = (cy + 5);
                     tx = (icx + icw + 25);
                     if(factor < 1)
                     {
@@ -316,31 +361,30 @@ namespace pu::ui::elm
                         icw = icw/factor;
                         icx = icx+((this->isize-icw)/2);
                     }
-                    Drawer->RenderTexture(curicon, icx, icy, { -1, icw, ich, -1.0f });
                 }
-                Drawer->RenderTexture(curname, tx, ty);
+                s32 tw = render::GetTextureWidth(curname);
+                const bool isCurrentFocus = (i == this->isel);
+                const bool isPreviousFocus = (i == this->previsel && !isCurrentFocus);
+                Color bgColor = isCurrentFocus ? this->fcs : (isPreviousFocus ? Color(this->clr.R - 70, this->clr.G - 70, this->clr.B - 70, this->clr.A) : this->clr);
+                if(this->selfact < 255 && isCurrentFocus) this->selfact += 48;
+                if(!this->suppressBaseBackground && !(this->suppressFocus && isPreviousFocus))
+                    Drawer->RenderRectangleFill(bgColor, cx, cy, cw, ch);
+                if(hasIcon)
+                    Drawer->RenderTexture(curicon, icx, icy, { -1, icw, ich, -1.0f });
+                if(!(this->hideFocusedText && (i == this->isel)))
+                    Drawer->RenderTexture(curname, tx, ty);
                 cy += ch;
             }
             if(this->ishow < this->itms.size())
             {
-                s32 sccr = this->scb.R;
-                s32 sccg = this->scb.G;
-                s32 sccb = this->scb.B;
-                s32 snr = sccr - 30;
-                if(snr < 0) snr = 0;
-                s32 sng = sccg - 30;
-                if(sng < 0) sng = 0;
-                s32 snb = sccb - 30;
-                if(snb < 0) snb = 0;
-                Color sclr(snr, sng, snb, this->scb.A);
-                s32 scx = X + (this->w - 20);
+                s32 scx = X + (this->w - 20) + this->scrollbarOffsetX;
                 s32 scy = Y;
                 s32 scw = 20;
                 s32 sch = (this->ishow * this->isize);
                 Drawer->RenderRectangleFill(this->scb, scx, scy, scw, sch);
                 s32 fch = ((this->ishow * sch) / this->itms.size());
                 s32 fcy = scy + (this->fisel * (sch / this->itms.size()));
-                Drawer->RenderRectangleFill(sclr, scx, fcy, scw, fch);
+                Drawer->RenderRectangleFill(this->sclr, scx, fcy, scw, fch);
             }
             //Drawer->RenderShadowSimple(cx, cy, cw, 5, 160);
         }
@@ -427,11 +471,11 @@ namespace pu::ui::elm
                             const s32 desiredFisel = this->isel - (this->ishow / 2);
                             const s32 newFisel = (desiredFisel < 0) ? 0 : ((desiredFisel > maxFisel) ? maxFisel : desiredFisel);
                             if(newFisel != this->fisel)
-                            {
                                 this->fisel = newFisel;
-                                ReloadItemRenders();
-                            }
                         }
+                        // Always re-render: even when fisel is unchanged,
+                        // the focused/unfocused item text colors differ.
+                        ReloadItemRenders();
                         if(!this->itms.empty()) for(s32 i = 0; i < this->itms.size(); i++)
                         {
                             if(i == this->isel) this->selfact = 0;
@@ -442,10 +486,7 @@ namespace pu::ui::elm
                     {
                         this->isel = 0;
                         this->fisel = 0;
-                        if(this->itms.size() > this->ishow)
-                        {
-                            ReloadItemRenders();
-                        }
+                        ReloadItemRenders();
                     }
                 }
             }
@@ -482,11 +523,11 @@ namespace pu::ui::elm
                             const s32 desiredFisel = this->isel - (this->ishow / 2);
                             const s32 newFisel = (desiredFisel < 0) ? 0 : ((desiredFisel > maxFisel) ? maxFisel : desiredFisel);
                             if(newFisel != this->fisel)
-                            {
                                 this->fisel = newFisel;
-                                ReloadItemRenders();
-                            }
                         }
+                        // Always re-render: even when fisel is unchanged,
+                        // the focused/unfocused item text colors differ.
+                        ReloadItemRenders();
                         if(!this->itms.empty()) for(s32 i = 0; i < this->itms.size(); i++)
                         {
                             if(i == this->isel) this->selfact = 0;
@@ -504,8 +545,8 @@ namespace pu::ui::elm
                             const s32 maxFisel = this->itms.size() - this->ishow;
                             const s32 desiredFisel = this->isel - (this->ishow / 2);
                             this->fisel = (desiredFisel < 0) ? 0 : ((desiredFisel > maxFisel) ? maxFisel : desiredFisel);
-                            ReloadItemRenders();
                         }
+                        ReloadItemRenders();
                     }
                 }
             }
@@ -536,7 +577,8 @@ namespace pu::ui::elm
         for(s32 i = this->fisel; i < (its + this->fisel); i++)
         {
             auto strname = this->itms[i]->GetName();
-            auto tex = render::RenderText(this->font, this->meme, strname, this->itms[i]->GetColor());
+            Color txtclr = (i == this->isel) ? this->fct : this->itms[i]->GetColor();
+            auto tex = render::RenderText(this->font, this->meme, strname, txtclr);
             this->loadednames.push_back(tex);
             if(this->itms[i]->HasIcon())
             {

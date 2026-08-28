@@ -69,9 +69,20 @@ namespace pu::ui::elm
             void SetColor(Color Color);
             Color GetOnFocusColor();
             void SetOnFocusColor(Color Color);
+            Color GetOnFocusTextColor();
+            void SetOnFocusTextColor(Color Color);
             Color GetScrollbarColor();
             void SetScrollbarColor(Color Color);
+            Color GetScrollbarHandleColor();
+            void SetScrollbarHandleColor(Color Color);
+            s32 GetScrollbarOffsetX();
+            void SetScrollbarOffsetX(s32 Offset);
             void SetOnSelectionChanged(std::function<void()> Callback);
+            void RefreshFocusTextRender();
+            void SetHideFocusedText(bool Hide);
+            void SetSuppressFocus(bool Suppress);
+            void SetSuppressBaseBackground(bool Suppress);
+
             void AddItem(MenuItem::Ref &Item);
             void ClearItems();
             void SetCooldownEnabled(bool Cooldown);
@@ -81,8 +92,8 @@ namespace pu::ui::elm
             void SetSelectedIndex(s32 Index);
             void OnRender(render::Renderer::Ref &Drawer, s32 X, s32 Y);
             void OnInput(u64 Down, u64 Up, u64 Held, Touch Pos);
-        private:
             void ReloadItemRenders();
+        private:
             bool dtouch;
             s32 x;
             s32 y;
@@ -95,8 +106,15 @@ namespace pu::ui::elm
             s32 pselfact;
             s32 selfact;
             Color scb;
+            Color sclr;
             Color clr;
             Color fcs;
+            Color fct;
+            bool hideFocusedText = false;
+            bool suppressFocus = false;
+            bool suppressBaseBackground = false;
+
+            s32 scrollbarOffsetX;
             bool icdown;
             int basestatus;
             std::chrono::time_point<std::chrono::steady_clock> basetime;

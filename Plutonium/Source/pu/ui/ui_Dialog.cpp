@@ -67,6 +67,13 @@ namespace pu::ui
         return this->hicon;
     }
 
+    void Dialog::SetButtonColor(s32 R, s32 G, s32 B)
+    {
+        this->btnR = R;
+        this->btnG = G;
+        this->btnB = B;
+    }
+
     s32 Dialog::Show(render::Renderer::Ref &Drawer, void *App)
     {
         if(this->hcancel) this->AddOption(this->scancel);
@@ -103,9 +110,9 @@ namespace pu::ui
         s32 elemw = ((dw - (20 * (this->opts.size() + 1))) / this->opts.size());
         s32 elx = dx + ((dw - ((elemw * this->opts.size()) + (20 * (this->opts.size() - 1)))) / 2);
         s32 r = 35;
-        s32 nr = 180;
-        s32 ng = 180;
-        s32 nb = 200;
+        s32 nr = (this->btnR >= 0) ? this->btnR : 180;
+        s32 ng = (this->btnG >= 0) ? this->btnG : 180;
+        s32 nb = (this->btnB >= 0) ? this->btnB : 200;
         bool end = false;
         s32 initfact = 0;
         auto app_ref = reinterpret_cast<Application*>(App);
