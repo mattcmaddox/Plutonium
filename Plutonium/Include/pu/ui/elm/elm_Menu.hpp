@@ -38,9 +38,16 @@ namespace pu::ui::elm
             bool HasIcon();
             void SetFactor(float Factor);
             float GetFactor();
+            // Optional per-item backdrop fill (used e.g. to "fill in" rows whose
+            // game was marked with X). Transparent by default = no custom fill.
+            void SetBackgroundColor(Color Color);
+            bool HasBackgroundColor();
+            Color GetBackgroundColor();
         private:
             std::string name;
             Color clr;
+            bool hasbg = false;
+            Color bgclr;
             bool hasicon = false;
             std::string icon;
             float factor = 0;

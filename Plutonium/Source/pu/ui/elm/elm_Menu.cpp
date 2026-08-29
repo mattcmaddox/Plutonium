@@ -83,6 +83,22 @@ namespace pu::ui::elm
         return this->factor;
     }
 
+    void MenuItem::SetBackgroundColor(Color Color)
+    {
+        this->bgclr = Color;
+        this->hasbg = true;
+    }
+
+    bool MenuItem::HasBackgroundColor()
+    {
+        return this->hasbg;
+    }
+
+    Color MenuItem::GetBackgroundColor()
+    {
+        return this->bgclr;
+    }
+
     Menu::Menu(s32 X, s32 Y, s32 Width, Color OptionColor, s32 ItemSize, s32 ItemsToShow, s32 fontSize)
         : Element::Element(), x(X), y(Y), w(Width), clr(OptionColor), isize(ItemSize), ishow(ItemsToShow)
     {
@@ -366,6 +382,14 @@ namespace pu::ui::elm
                 const bool isCurrentFocus = (i == this->isel);
                 const bool isPreviousFocus = (i == this->previsel && !isCurrentFocus);
                 Color bgColor = isCurrentFocus ? this->fcs : (isPreviousFocus ? Color(this->clr.R - 70, this->clr.G - 70, this->clr.B - 70, this->clr.A) : this->clr);
+                // A per-item backdrop fill (set by the shop for marked items)
+                // fills the row when it is NOT the current focus and actually
+                // has a visible (non-transparent) color. The focus bar always
+                // wins on the focused row so it stays visible even when the
+                // focused game is marked; transparent resets keep the default
+                // menu background.
+                if(itm->HasBackgroundColor() && !isCurrentFocus && itm->GetBackgroundColor().A > 0)
+                    bgColor = itm->GetBackgroundColor();
                 if(this->selfact < 255 && isCurrentFocus) this->selfact += 48;
                 if(!this->suppressBaseBackground && !(this->suppressFocus && isPreviousFocus))
                     Drawer->RenderRectangleFill(bgColor, cx, cy, cw, ch);
