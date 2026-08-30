@@ -267,6 +267,26 @@ namespace pu::ui::elm
         this->suppressBaseBackground = Suppress;
     }
 
+    void Menu::SetIconScale(float Scale)
+    {
+        this->iconScale = (Scale > 0.0f) ? Scale : 1.0f;
+    }
+
+    float Menu::GetIconScale()
+    {
+        return this->iconScale;
+    }
+
+    void Menu::SetTintIconWithText(bool Tint)
+    {
+        this->tintIconWithText = Tint;
+    }
+
+    bool Menu::GetTintIconWithText()
+    {
+        return this->tintIconWithText;
+    }
+
     void Menu::AddItem(MenuItem::Ref &Item)
     {
         this->itms.push_back(Item);
@@ -363,10 +383,17 @@ namespace pu::ui::elm
                         itm->SetFactor((float)h/w);
                     }
                     float factor = itm->GetFactor();
-                    icw = (this->isize - 10);
+                    // CatHead: allow a per-menu icon scale so the Shop's
+                    // checkboxes can be drawn bigger than the default
+                    // (row height - 10) without resizing the rows.
+                    const s32 iconBase = (s32)((this->isize - 10) * this->iconScale);
+                    icw = iconBase;
                     ich = icw;
                     icx = (cx + 25);
-                    icy = (cy + 5);
+                    // Scaled (enlarged) icons keep their own vertical centre so a
+                    // bigger checkbox still sits inside its own row; the default
+                    // unscaled offset (cy + 5) is preserved for other menus.
+                    icy = (this->iconScale == 1.0f) ? (cy + 5) : (cy + ((this->isize - ich) / 2));
                     tx = (icx + icw + 25);
                     if(factor < 1)
                     {
@@ -394,7 +421,19 @@ namespace pu::ui::elm
                 if(!this->suppressBaseBackground && !(this->suppressFocus && isPreviousFocus))
                     Drawer->RenderRectangleFill(bgColor, cx, cy, cw, ch);
                 if(hasIcon)
+                {
+                    // CatHead: when enabled, the icon follows its row's text
+                    // colour exactly — the focused row's checkbox turns the
+                    // focus text colour (black in OLED / white otherwise),
+                    // unfocused rows keep their own (white) colour. Done via an
+                    // RGB color-mod so white alpha-preserved PNGs recolor cleanly.
+                    if(this->tintIconWithText)
+                    {
+                        const Color iconTint = isCurrentFocus ? this->fct : itm->GetColor();
+                        render::SetColorValue(curicon, iconTint);
+                    }
                     Drawer->RenderTexture(curicon, icx, icy, { -1, icw, ich, -1.0f });
+                }
                 if(!(this->hideFocusedText && (i == this->isel)))
                     Drawer->RenderTexture(curname, tx, ty);
                 cy += ch;

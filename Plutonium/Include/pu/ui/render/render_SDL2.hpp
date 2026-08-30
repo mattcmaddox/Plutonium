@@ -55,6 +55,11 @@ namespace pu::ui::render
     s32 GetTextureHeight(NativeTexture Texture);
     std::pair<s32,s32> GetTextureSize(NativeTexture Texture);
     void SetAlphaValue(NativeTexture Texture, u8 Alpha);
+    // Tint a texture's RGB by multiplying it with the given colour (alpha
+    // untouched). Used to make a Menu icon follow its row's text colour, so a
+    // white-on-black/checkbox icon turns black on the focused row just like
+    // the row label does.
+    void SetColorValue(NativeTexture Texture, Color Color);
     void DeleteFont(NativeFont& Font);
     void DeleteTexture(NativeTexture& Texture);
 

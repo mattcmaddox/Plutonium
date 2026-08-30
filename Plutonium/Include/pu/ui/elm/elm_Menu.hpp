@@ -100,6 +100,16 @@ namespace pu::ui::elm
             void OnRender(render::Renderer::Ref &Drawer, s32 X, s32 Y);
             void OnInput(u64 Down, u64 Up, u64 Held, Touch Pos);
             void ReloadItemRenders();
+
+            // Per-menu icon styling knobs (CatHead). iconScale scales the icon
+            // up/down from its default (row height - 10). When tintIconWithText
+            // is true, the focused row's icon is tinted to the on-focus text
+            // colour (so a white checkbox outline turns black on the focused
+            // row, matching the label), and unfocused icons use their own color.
+            void SetIconScale(float Scale);
+            float GetIconScale();
+            void SetTintIconWithText(bool Tint);
+            bool GetTintIconWithText();
         private:
             bool dtouch;
             s32 x;
@@ -120,6 +130,9 @@ namespace pu::ui::elm
             bool hideFocusedText = false;
             bool suppressFocus = false;
             bool suppressBaseBackground = false;
+
+            bool tintIconWithText = false;
+            float iconScale = 1.0f;
 
             s32 scrollbarOffsetX;
             bool icdown;

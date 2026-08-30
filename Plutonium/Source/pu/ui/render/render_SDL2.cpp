@@ -154,6 +154,12 @@ namespace pu::ui::render
         SDL_SetTextureAlphaMod(Texture, Alpha);
     }
 
+    void SetColorValue(NativeTexture Texture, Color Color)
+    {
+        SDL_SetTextureBlendMode(Texture, SDL_BLENDMODE_BLEND);
+        SDL_SetTextureColorMod(Texture, Color.R, Color.G, Color.B);
+    }
+
     void DeleteFont(NativeFont& Font)
     {
         if (Font != nullptr) {
