@@ -110,6 +110,14 @@ namespace pu::ui::elm
             float GetIconScale();
             void SetTintIconWithText(bool Tint);
             bool GetTintIconWithText();
+            // Per-row backdrop fill overhang (CatHead). Adds this many px to the
+            // width of every row's backdrop fill only (not to this->w), so the
+            // focused/backdrop bar can extend past the menu's box right edge —
+            // used to fill the no-scrollbar gutter flush to the art pane. Rows
+            // keep their true state colors because OnRender computes each row's
+            // fill color regardless of the overhang.
+            void SetRowFillOverhang(s32 Overhang);
+            s32 GetRowFillOverhang();
         private:
             bool dtouch;
             s32 x;
@@ -133,6 +141,7 @@ namespace pu::ui::elm
 
             bool tintIconWithText = false;
             float iconScale = 1.0f;
+            s32 rowFillOverhang = 0;
 
             s32 scrollbarOffsetX;
             bool icdown;

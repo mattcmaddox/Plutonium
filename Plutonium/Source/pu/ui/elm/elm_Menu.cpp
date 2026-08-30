@@ -272,6 +272,16 @@ namespace pu::ui::elm
         this->iconScale = (Scale > 0.0f) ? Scale : 1.0f;
     }
 
+    void Menu::SetRowFillOverhang(s32 Overhang)
+    {
+        this->rowFillOverhang = (Overhang > 0) ? Overhang : 0;
+    }
+
+    s32 Menu::GetRowFillOverhang()
+    {
+        return this->rowFillOverhang;
+    }
+
     float Menu::GetIconScale()
     {
         return this->iconScale;
@@ -419,7 +429,7 @@ namespace pu::ui::elm
                     bgColor = itm->GetBackgroundColor();
                 if(this->selfact < 255 && isCurrentFocus) this->selfact += 48;
                 if(!this->suppressBaseBackground && !(this->suppressFocus && isPreviousFocus))
-                    Drawer->RenderRectangleFill(bgColor, cx, cy, cw, ch);
+                    Drawer->RenderRectangleFill(bgColor, cx, cy, cw + this->rowFillOverhang, ch);
                 if(hasIcon)
                 {
                     // CatHead: when enabled, the icon follows its row's text
