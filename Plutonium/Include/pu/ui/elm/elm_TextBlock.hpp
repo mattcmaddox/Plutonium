@@ -34,6 +34,10 @@ namespace pu::ui::elm
             std::string GetText();
             void SetText(const std::string& Text);
             void SetFontSize(s32 FontSize);
+            // CatHead: lets callers measure with the block's own font size
+            // via texture-free metrics (ui/textMetrics.hpp) instead of
+            // rasterizing probes through the block.
+            s32 GetFontSize();
             Color GetColor();
             void SetColor(Color Color);
             void OnRender(render::Renderer::Ref &Drawer, s32 X, s32 Y);
@@ -44,6 +48,7 @@ namespace pu::ui::elm
             s32 y;
             render::NativeFont font;
             render::NativeFont meme;
+            s32 fontSize = 25;
             Color clr;
             render::NativeTexture ntex = nullptr;
     };

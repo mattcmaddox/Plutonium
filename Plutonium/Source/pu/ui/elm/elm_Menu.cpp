@@ -474,7 +474,6 @@ namespace pu::ui::elm
                         icx = icx+((this->isize-icw)/2);
                     }
                 }
-                s32 tw = render::GetTextureWidth(curname);
                 const bool isCurrentFocus = (i == this->isel);
                 const bool isPreviousFocus = (i == this->previsel && !isCurrentFocus);
                 Color bgColor = isCurrentFocus ? this->fcs : (isPreviousFocus ? Color(this->clr.R - 70, this->clr.G - 70, this->clr.B - 70, this->clr.A) : this->clr);

@@ -61,6 +61,14 @@ namespace pu::ui::elm
 
     void TextBlock::SetText(const std::string& Text)
     {
+        // CatHead: every SetText was a full TTF rasterization + GPU texture
+        // upload even when the string was identical — and several callers
+        // (marquee per-frame refresh, status clocks, sidebar re-layouts)
+        // re-set the same text constantly. Skip the re-render when the text
+        // is unchanged; a null texture for empty text behaves exactly like
+        // the one a real empty-string render used to produce.
+        if(this->text == Text)
+            return;
         this->text = Text;
         render::DeleteTexture(this->ntex);
         this->ntex = render::RenderText(this->font, this->meme, Text, this->clr);
@@ -68,10 +76,16 @@ namespace pu::ui::elm
 
     void TextBlock::SetFontSize(s32 FontSize)
     {
+        this->fontSize = FontSize;
         this->font = render::LoadDefaultFont(FontSize);
         this->meme = render::LoadSharedFont(render::SharedFont::NintendoExtended, FontSize);
         render::DeleteTexture(this->ntex);
         this->ntex = render::RenderText(this->font, this->meme, this->text, this->clr);
+    }
+
+    s32 TextBlock::GetFontSize()
+    {
+        return this->fontSize;
     }
 
     Color TextBlock::GetColor()
@@ -81,6 +95,11 @@ namespace pu::ui::elm
 
     void TextBlock::SetColor(Color Color)
     {
+        // CatHead: same dirty-check as SetText — color-only re-sets (row
+        // focus recolors over unchanged labels) must not re-rasterize.
+        if(this->clr.R == Color.R && this->clr.G == Color.G
+            && this->clr.B == Color.B && this->clr.A == Color.A)
+            return;
         this->clr = Color;
         render::DeleteTexture(this->ntex);
         this->ntex = render::RenderText(this->font, this->meme, this->text, Color);
