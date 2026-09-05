@@ -41,6 +41,16 @@ namespace pu::ui::elm
             Color GetColor();
             void SetColor(Color Color);
             void OnRender(render::Renderer::Ref &Drawer, s32 X, s32 Y);
+            // CatHead: pixel-phase smooth scrolling. When BandH >= 1, the
+            // render draws ONLY the texture band starting at (possibly
+            // NEGATIVE) BandYPx — dst height = BandH, so the drawn result
+            // always occupies exactly the element's slot. BandYPx < 0 is
+            // legitimate: the blank rows above the texture render as
+            // nothing and the rest is shifted down (see RenderTextureBand).
+            // SetRenderBand clamps H to >= 1; ClearRenderBand sets H = 0
+            // ("band off" = plain full draw).
+            void SetRenderBand(s32 BandYPx, s32 BandH);
+            void ClearRenderBand();
             void OnInput(u64 Down, u64 Up, u64 Held, Touch Pos);
         private:
             std::string text;
@@ -49,7 +59,9 @@ namespace pu::ui::elm
             render::NativeFont font;
             render::NativeFont meme;
             s32 fontSize = 25;
-            Color clr;
+            s32 bandYPx = -1;   // <0 = normal full draw
+            s32 bandHPx = 0;
+            Color clr;
             render::NativeTexture ntex = nullptr;
     };
 }

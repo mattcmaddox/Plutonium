@@ -125,6 +125,50 @@ namespace pu::ui::render
         SDL_RenderCopyEx(purend, Texture, NULL, &pos, angle, NULL, SDL_FLIP_NONE);
     }
 
+    void Renderer::RenderTextureBand(NativeTexture Texture, s32 X, s32 Y, s32 SrcY, s32 SrcH)
+    {
+        // CatHead: source-band draw for pixel-phase smooth scrolling — blit
+        // [0, SrcY, texW, SrcH] at (X, Y), dst size = band size. Clamped to
+        // the texture bounds; null/empty draws nothing (same contract as
+        // RenderTexture with a null texture).
+        // NEGATIVE SrcY convention (settle blend-in): the band starts ABOVE
+        // the texture top by -SrcY pixels — those missing rows draw as blank
+        // at the band's top and the remainder is clamped from the texture
+        // start, with the draw shifted DOWN by the hidden rows so the
+        // texture's row 0 lands at Y + (-SrcY). As SrcY rises toward 0 the
+        // blank strip shrinks continuously: pixel-continuous arrival.
+        int tw = 0, th = 0;
+        SDL_QueryTexture(Texture, NULL, NULL, &tw, &th);
+        if ((Texture == nullptr) || (tw <= 0) || (th <= 0) || (SrcH <= 0))
+            return;
+        s32 shiftDown = 0;
+        if (SrcY < 0)
+        {
+            if (-SrcY >= SrcH)
+                return;
+            shiftDown = -SrcY;
+            SrcH += SrcY; // shrink by the blank strip height
+            SrcY = 0;
+        }
+        if (SrcY >= th)
+            return;
+        if (SrcY + SrcH > th)
+            SrcH = th - SrcY;
+        if (SrcH <= 0)
+            return;
+        SDL_Rect src;
+        src.x = 0;
+        src.y = SrcY;
+        src.w = tw;
+        src.h = SrcH;
+        SDL_Rect pos;
+        pos.x = X + this->basex;
+        pos.y = Y + this->basey + shiftDown;
+        pos.w = src.w;
+        pos.h = src.h;
+        SDL_RenderCopyEx(purend, Texture, &src, &pos, 0.0f, NULL, SDL_FLIP_NONE);
+    }
+
     void Renderer::RenderRectangle(Color Color, s32 X, s32 Y, s32 Width, s32 Height)
     {
         SDL_Rect rect;

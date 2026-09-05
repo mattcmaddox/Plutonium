@@ -105,11 +105,33 @@ namespace pu::ui::elm
         this->ntex = render::RenderText(this->font, this->meme, this->text, Color);
     }
 
+    void TextBlock::SetRenderBand(s32 BandYPx, s32 BandH)
+    {
+        // Negative Y is a LEGITIMATE band position (the window base sits
+        // below the band top near the document start — the band shows blank
+        // above the texture). "Band off" is encoded by BandH < 1 instead;
+        // clamp H to >= 1 inside so a degenerate call can't produce an
+        // empty draw.
+        this->bandYPx = BandYPx;
+        this->bandHPx = BandH < 1 ? 1 : BandH;
+    }
+
+    void TextBlock::ClearRenderBand()
+    {
+        this->bandYPx = 0;
+        this->bandHPx = 0;
+    }
+
     void TextBlock::OnRender(render::Renderer::Ref &Drawer, s32 X, s32 Y)
     {
         s32 rdx = X;
         s32 rdy = Y;
-        Drawer->RenderTexture(this->ntex, rdx, rdy);
+        if (this->bandHPx >= 1)
+        {
+            Drawer->RenderTextureBand(this->ntex, rdx, rdy, this->bandYPx, this->bandHPx);
+        }
+        else
+            Drawer->RenderTexture(this->ntex, rdx, rdy);
     }
 
     void TextBlock::OnInput(u64 Down, u64 Up, u64 Held, Touch Pos)

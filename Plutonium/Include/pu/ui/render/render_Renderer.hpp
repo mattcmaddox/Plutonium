@@ -80,6 +80,12 @@ namespace pu::ui::render
             void InitializeRender(Color Color);
             void FinalizeRender();
             void RenderTexture(NativeTexture Texture, s32 X, s32 Y, NativeTextureRenderOptions Options = NativeTextureRenderOptions::Default);
+            // CatHead: draw a horizontal BAND of a texture — source rect
+            // [0, SrcY, texW, SrcH] — at (X, Y) with dst size = band size.
+            // Needed for pixel-phase smooth scrolling: a text texture
+            // rendered with one extra line can be shifted by a fractional
+            // line by cropping the band start.
+            void RenderTextureBand(NativeTexture Texture, s32 X, s32 Y, s32 SrcY, s32 SrcH);
             void RenderRectangle(Color Color, s32 X, s32 Y, s32 Width, s32 Height);
             void RenderRectangleFill(Color Color, s32 X, s32 Y, s32 Width, s32 Height);
             void RenderRectangleOutline(Color Color, u32 X, u32 Y, u32 Width, u32 Height, u32 BorderWidth);
