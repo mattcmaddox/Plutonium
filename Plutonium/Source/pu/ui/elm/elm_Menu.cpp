@@ -353,6 +353,65 @@ namespace pu::ui::elm
         }
     }
 
+    bool Menu::StepSelectionQuiet(s32 Delta)
+    {
+        if(this->itms.empty() || Delta == 0)
+            return false;
+        s32 next = this->isel + Delta;
+        if(next < 0)
+            next = 0;
+        if(next > (s32)this->itms.size() - 1)
+            next = (s32)this->itms.size() - 1;
+        if(next == this->isel)
+            return false;
+
+        this->previsel = this->isel;
+        this->isel = next;
+
+        // Same VIM-zz centered-scroll window as SetSelectedIndex/OnInput.
+        const s32 oldFisel = this->fisel;
+        if(this->itms.size() > this->ishow)
+        {
+            const s32 maxFisel = (s32)this->itms.size() - this->ishow;
+            const s32 desiredFisel = this->isel - (this->ishow / 2);
+            this->fisel = (desiredFisel < 0) ? 0 : ((desiredFisel > maxFisel) ? maxFisel : desiredFisel);
+        }
+
+        // Cold cache or a scrolled window: a couple of targeted re-renders
+        // would leave rows blank — do the full reload (same cost as before).
+        // `its` mirrors ReloadItemRenders' visible-row count so short lists
+        // (fewer items than ishow) don't degenerate into full reloads.
+        s32 its = this->ishow;
+        if(its > (s32)this->itms.size())
+            its = (s32)this->itms.size();
+        if((its + this->fisel) > (s32)this->itms.size())
+            its = (s32)this->itms.size() - this->fisel;
+        if(this->fisel != oldFisel || this->loadednames.size() != (u32)its)
+        {
+            ReloadItemRenders();
+            return true;
+        }
+
+        // Only the two focus-swapped rows change ink: old focus redraws in
+        // its own colour, new focus in fct. Re-render exactly those; every
+        // other row keeps its existing texture. Icons never change on a
+        // selection move and are tinted at render time, so skipping their
+        // reload is pixel-identical.
+        const auto rerenderRow = [&](const s32 idx)
+        {
+            if(idx < this->fisel || idx >= this->fisel + (s32)this->loadednames.size())
+                return;
+            const u32 slot = (u32)(idx - this->fisel);
+            render::DeleteTexture(this->loadednames[slot]);
+            const Color txtclr = (idx == this->isel) ? this->fct : this->itms[idx]->GetColor();
+            this->loadednames[slot] = render::RenderText(this->font, this->meme,
+                this->itms[idx]->GetName(), txtclr);
+        };
+        rerenderRow(this->previsel);
+        rerenderRow(this->isel);
+        return true;
+    }
+
     void Menu::OnRender(render::Renderer::Ref &Drawer, s32 X, s32 Y)
     {
         if(!this->itms.empty())

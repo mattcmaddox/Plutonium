@@ -97,6 +97,18 @@ namespace pu::ui::elm
             std::vector<MenuItem::Ref> &GetItems();
             s32 GetSelectedIndex();
             void SetSelectedIndex(s32 Index);
+            // CatHead: move the selection one step (clamped) WITHOUT firing
+            // onselch, WITHOUT touching the focus-fade animation state, and
+            // re-rendering ONLY the two rows whose text colour changed
+            // (focused rows draw fct, the rest their own colour). A full
+            // ReloadItemRenders re-rasterizes every visible row and reloads
+            // every icon — wasteful when the caller steps repeatedly with
+            // the menu hidden behind an overlay. Icons are deliberately left
+            // as-is: a selection move never changes which icon a row shows
+            // (icon colour tinting is done at render time). Falls back to a
+            // full reload when the visible window scrolled or the render
+            // cache is cold. Returns true when the selection moved.
+            bool StepSelectionQuiet(s32 Delta);
             void OnRender(render::Renderer::Ref &Drawer, s32 X, s32 Y);
             void OnInput(u64 Down, u64 Up, u64 Held, Touch Pos);
             void ReloadItemRenders();
