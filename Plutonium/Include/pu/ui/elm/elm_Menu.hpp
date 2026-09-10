@@ -43,6 +43,11 @@ namespace pu::ui::elm
             void SetBackgroundColor(Color Color);
             bool HasBackgroundColor();
             Color GetBackgroundColor();
+            // Opt this item out of the menu's icon-text tinting. Used for
+            // multi-color icons (e.g. the shop's paw stamp) that must never
+            // be color-mod'd into the row text colour on focus.
+            void SetTintIconWithText(bool Tint);
+            bool GetTintIconWithText();
         private:
             std::string name;
             Color clr;
@@ -50,6 +55,7 @@ namespace pu::ui::elm
             Color bgclr;
             bool hasicon = false;
             std::string icon;
+            bool tintIconWithText = true;
             float factor = 0;
             std::vector<std::function<void()>> cbs;
             std::vector<u64> cbipts;

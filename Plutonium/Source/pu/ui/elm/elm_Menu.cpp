@@ -99,6 +99,16 @@ namespace pu::ui::elm
         return this->bgclr;
     }
 
+    void MenuItem::SetTintIconWithText(bool Tint)
+    {
+        this->tintIconWithText = Tint;
+    }
+
+    bool MenuItem::GetTintIconWithText()
+    {
+        return this->tintIconWithText;
+    }
+
     Menu::Menu(s32 X, s32 Y, s32 Width, Color OptionColor, s32 ItemSize, s32 ItemsToShow, s32 fontSize)
         : Element::Element(), x(X), y(Y), w(Width), clr(OptionColor), isize(ItemSize), ishow(ItemsToShow)
     {
@@ -476,17 +486,31 @@ namespace pu::ui::elm
                 }
                 const bool isCurrentFocus = (i == this->isel);
                 const bool isPreviousFocus = (i == this->previsel && !isCurrentFocus);
-                Color bgColor = isCurrentFocus ? this->fcs : (isPreviousFocus ? Color(this->clr.R - 70, this->clr.G - 70, this->clr.B - 70, this->clr.A) : this->clr);
-                // A per-item backdrop fill (set by the shop for marked items)
-                // fills the row when it is NOT the current focus and actually
-                // has a visible (non-transparent) color. The focus bar always
-                // wins on the focused row so it stays visible even when the
-                // focused game is marked; transparent resets keep the default
-                // menu background.
-                if(itm->HasBackgroundColor() && !isCurrentFocus && itm->GetBackgroundColor().A > 0)
+                // A row's own visible backdrop (set by the shop for marked
+                // items) is CONTENT, not focus chrome: it draws on every
+                // unfocused row regardless of trail state. The focus bar
+                // always wins on the focused row even when that row is
+                // marked; transparent resets (A=0) count as "no backdrop".
+                const bool rowHasOwnFill = itm->HasBackgroundColor() && (itm->GetBackgroundColor().A > 0);
+                // Row fill precedence, highest first:
+                //   1. focus bar       — the menu's focus chrome (focused row)
+                //   2. row backdrop    — the row's own content fill
+                //   3. menu base color — dimmed on the trail row
+                // suppressFocus marks a self-managed menu (the Shop): its
+                // rows style themselves, so the menu contributes no trail
+                // dim; content (2) still draws, trail row included.
+                Color bgColor = this->clr;
+                bool drawFill = true;
+                if(isCurrentFocus)
+                    bgColor = this->fcs;
+                else if(rowHasOwnFill)
                     bgColor = itm->GetBackgroundColor();
+                else if(isPreviousFocus && this->suppressFocus)
+                    drawFill = false;
+                else if(isPreviousFocus)
+                    bgColor = Color(this->clr.R - 70, this->clr.G - 70, this->clr.B - 70, this->clr.A);
                 if(this->selfact < 255 && isCurrentFocus) this->selfact += 48;
-                if(!this->suppressBaseBackground && !(this->suppressFocus && isPreviousFocus))
+                if(!this->suppressBaseBackground && drawFill)
                     Drawer->RenderRectangleFill(bgColor, cx, cy, cw + this->rowFillOverhang, ch);
                 if(hasIcon)
                 {
@@ -495,7 +519,7 @@ namespace pu::ui::elm
                     // focus text colour (black in OLED / white otherwise),
                     // unfocused rows keep their own (white) colour. Done via an
                     // RGB color-mod so white alpha-preserved PNGs recolor cleanly.
-                    if(this->tintIconWithText)
+                    if(this->tintIconWithText && itm->GetTintIconWithText())
                     {
                         const Color iconTint = isCurrentFocus ? this->fct : itm->GetColor();
                         render::SetColorValue(curicon, iconTint);
