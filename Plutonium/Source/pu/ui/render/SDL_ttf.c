@@ -1087,6 +1087,15 @@ int TTF_FontLineSkip(const TTF_Font *font)
     return font->lineskip;
 }
 
+/* CatHead: set the recommended spacing between lines (the pitch the wrapped
+   renderer advances rows by). Skip > 0 only; callers wanting extra leading
+   pass TTF_FontLineSkip(font) + gap. */
+void TTF_SetFontLineSkip(TTF_Font *font, int skip)
+{
+    if (font != NULL && skip > 0)
+        font->lineskip = skip;
+}
+
 int TTF_GetFontKerning(const TTF_Font *font)
 {
     return font->kerning;

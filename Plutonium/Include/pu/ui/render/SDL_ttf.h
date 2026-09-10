@@ -144,6 +144,10 @@ extern DECLSPEC int SDLCALL TTF_FontDescent(const TTF_Font *font);
 /* Get the recommended spacing between lines of text for this font */
 extern DECLSPEC int SDLCALL TTF_FontLineSkip(const TTF_Font *font);
 
+/* CatHead: set the recommended spacing between lines of text for this font
+   (the pitch the wrapped renderer advances rows by). Values <= 0 are ignored. */
+extern DECLSPEC void SDLCALL TTF_SetFontLineSkip(TTF_Font *font, int skip);
+
 /* Get/Set whether or not kerning is allowed for this font */
 extern DECLSPEC int SDLCALL TTF_GetFontKerning(const TTF_Font *font);
 extern DECLSPEC void SDLCALL TTF_SetFontKerning(TTF_Font *font, int allowed);
